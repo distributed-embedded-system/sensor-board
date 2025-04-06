@@ -1,3 +1,4 @@
+#include "Core.h"
 #include <Arduino.h>
 
 void setup()
@@ -8,7 +9,10 @@ void setup()
 
 void loop()
 {
-	// put your main code here, to run repeatedly:
-	Serial.println("Hello Sensor board!");
+	// Serial.println("Hello Sensor board!");
+
+	static Core core(false); // pass mock_enabled
+	core.update();
+
 	delay(1000);
 }
