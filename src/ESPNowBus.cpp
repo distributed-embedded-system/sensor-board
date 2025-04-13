@@ -17,7 +17,7 @@ void ESPNowBus::init()
 		return;
 	}
 
-	// esp_now_set_pmk(PMK);
+	esp_now_set_pmk(PMK);
 
 	// Register callback middleware (ESP Now supports one)
 	register_on_receive_callback_internal();
@@ -33,8 +33,8 @@ int ESPNowBus::register_peer(uint8_t* mac_addr)
 
 	memcpy(peerInfo.peer_addr, mac_addr, 6);
 	peerInfo.channel = 0;
-	peerInfo.encrypt = false;
-	// memcpy(peerInfo.lmk, LMK, ESP_NOW_KEY_LEN);
+	peerInfo.encrypt = true;
+	memcpy(peerInfo.lmk, LMK, ESP_NOW_KEY_LEN);
 
 	int status = esp_now_add_peer(&peerInfo);
 	if (status != ESP_OK)

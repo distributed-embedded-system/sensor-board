@@ -71,6 +71,7 @@ void Core::update()
 
 		m_esp_now->send_message(
 			MAIN_BOARD_MAC_ADDRESS, ESPNowMessageTypes::IS_DARK_CHANGED, payload.to_string());
+
 		m_light_module->setHasChanged(false);
 
 		m_light_stamp = millis();
