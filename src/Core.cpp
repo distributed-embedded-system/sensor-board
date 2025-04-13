@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "../lib/esp_now/payloads/DHTReadingsPayload.h"
 #include "../lib/esp_now/payloads/FanManualControlPayload.h"
+#include "../lib/esp_now/payloads/FanRPMReadingPayload.h"
 #include "../lib/esp_now/payloads/FanSpeedControlPayload.h"
 #include "../lib/esp_now/payloads/LDRReadingPayload.h"
 #include "../lib/esp_now/payloads/LEDManualControlPayload.h"
@@ -13,11 +14,11 @@
 #include "utils/Time.h"
 #include <Arduino.h>
 
-Core::Core(bool isMockEnabled = false)
+Core::Core()
 	// initialize the class member field in order to be ready by the time we reach the constructor
 	// and call init_server as the function uses m_server
 	// "{}" are used instead of "()" because we use newer C++ standard
-	: m_stamp{millis()}, m_esp_now{std::make_unique<ESPNowBus>(isMockEnabled)},
+	: m_temp_stamp{millis()}, m_light_stamp{millis()}, m_esp_now{std::make_unique<ESPNowBus>()},
 	  m_temp_module{std::make_unique<TempModule>()}, m_light_module{std::make_unique<LightModule>()}
 {
 	Serial.println("Core initialized.");
@@ -39,19 +40,28 @@ void Core::update()
 	m_light_module->update();
 
 	// stop flooding with calls because we cannot read more than once every 2 secs anyway
-	if (millis() - m_stamp <= Time::ONE_SECOND * 2)
-		return;
+	// if (millis() - m_stamp <= Time::ONE_SECOND * 2)
+	// 	return;
 
-	if (m_temp_module->getHasChanged())
+	unsigned long now = millis();
+
+	if (now - m_temp_stamp >= 2 * Time::ONE_SECOND && m_temp_module->getHasChanged())
 	{
 		// send new temp data to main board
-		DHTReadingsMsgPayload payload(m_temp_module->getTemp(), m_temp_module->getHumidity());
+		DHTReadingsMsgPayload tempPayload(m_temp_module->getTemp(), m_temp_module->getHumidity());
 		m_esp_now->send_message(
-			MAIN_BOARD_MAC_ADDRESS, ESPNowMessageTypes::TEMP_CHANGED, payload.to_string());
+			MAIN_BOARD_MAC_ADDRESS, ESPNowMessageTypes::TEMP_CHANGED, tempPayload.to_string());
+
+		FanRPMReadingMsgPayload fanPayload(m_temp_module->getFanRPM());
+		m_esp_now->send_message(
+			MAIN_BOARD_MAC_ADDRESS, ESPNowMessageTypes::FAN_RPM_CHANGED, fanPayload.to_string());
+
 		m_temp_module->setHasChanged(false);
+
+		m_temp_stamp = millis();
 	}
 
-	if (m_light_module->getHasChanged())
+	if (now - m_light_stamp >= Time::ONE_SECOND && m_light_module->getHasChanged())
 	{
 		// send new light data to main board
 		Serial.print("LIGHT MODULE READING: ");
@@ -62,9 +72,9 @@ void Core::update()
 		m_esp_now->send_message(
 			MAIN_BOARD_MAC_ADDRESS, ESPNowMessageTypes::IS_DARK_CHANGED, payload.to_string());
 		m_light_module->setHasChanged(false);
-	}
 
-	m_stamp = millis();
+		m_light_stamp = millis();
+	}
 }
 
 void Core::init_esp_now()

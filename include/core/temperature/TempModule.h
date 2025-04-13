@@ -21,6 +21,7 @@ private:
 	float	m_temperature			 = INITIAL_TEMP;
 	float	m_temp_threshold		 = INITIAL_TEMPERATURE_THRESHOLD;
 	uint8_t m_fan_speed				 = INITIAL_FAN_SPEED;
+	int		m_fan_rpm				 = INITIAL_FAN_RPM;
 	bool	m_is_manual_mode_enabled = INITIAL_IS_FAN_MANUAL_MODE_ENABLED;
 
 	dht_driver_up m_dht_driver;
@@ -38,6 +39,7 @@ public:
 	float getHumidity();
 	void  setHasChanged(bool hasChanged);
 	bool  getIsManualModeEnabled();
+	int	  getFanRPM();
 	int	  getFanSpeed();
 	void  setFanSpeed(int fanSpeed);
 	void  setTempThreshold(float tempThreshold);

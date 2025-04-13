@@ -5,7 +5,8 @@
 const auto INITIAL_HAS_TEMP_CHANGED			  = true;
 const auto INITIAL_TEMP						  = 0.0f;
 const auto INITIAL_HUMIDITY					  = 0.0f;
-const auto INITIAL_FAN_SPEED				  = 33.0f;
+const auto INITIAL_FAN_SPEED				  = 33;
+const auto INITIAL_FAN_RPM					  = 0;
 const auto INITIAL_TEMPERATURE_THRESHOLD	  = 25.0f;
 const auto INITIAL_IS_FAN_MANUAL_MODE_ENABLED = false;
 

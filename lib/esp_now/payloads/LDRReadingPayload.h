@@ -13,7 +13,7 @@ public:
 	LDRReadingMsgPayload(bool isDark) : m_is_dark{isDark} {}
 
 	// Construct from string
-	LDRReadingMsgPayload(const std::string& raw_data) { std::istringstream(raw_data) >> m_is_dark; }
+	LDRReadingMsgPayload(const std::string& raw_data) { parseBool(raw_data, m_is_dark); }
 
 	bool getIsDark() const { return m_is_dark; }
 

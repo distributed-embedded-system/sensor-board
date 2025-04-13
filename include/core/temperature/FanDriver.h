@@ -9,8 +9,6 @@ private:
 	uint8_t	  m_pwm_pin;
 	uint8_t	  m_tach_pin;
 	int		  m_rpm;
-	const int PULSES_PER_REVOLUTION = PULSES_PER_REVOLUTION;
-	const int MAX_RPM				= MAX_RPM;
 
 public:
 	FanDriver();

@@ -12,30 +12,27 @@ LightModule::~LightModule() = default;
 
 void LightModule::update()
 {
-	// Only execute every 2 seconds
-	if (millis() - m_stamp <= Time::ONE_SECOND * 2)
-		return;
+	bool currentReading = m_ldr_driver->readIsDark();
 
-	if (m_is_dark == m_ldr_driver->readIsDark())
-		return;
-
-	// only update the light state if there is a change from the last recorded state
-	// toggle the has changed flag to later use when checking whether or not to fire a message to
-	// Control Module
-	m_has_changed = true;
-
-	m_is_dark = m_ldr_driver->readIsDark();
-
-	if (m_is_manual_mode_enabled)
+	// If state has changed, start debounce timer
+	if (currentReading != m_last_reading)
 	{
-		m_stamp = millis();
-		return;
+		m_last_debounce_time = millis();
+		m_last_reading		 = currentReading;
 	}
 
-	m_is_led_enabled = m_is_dark;
-	m_led_driver->setLEDState(m_is_led_enabled);
+	// Only update state if the reading has been stable for 300ms
+	if ((millis() - m_last_debounce_time) < 300 || currentReading == m_is_dark)
+		return;
 
-	m_stamp = millis();
+	m_is_dark	  = currentReading;
+	m_has_changed = true;
+
+	if (!m_is_manual_mode_enabled)
+	{
+		m_is_led_enabled = m_is_dark;
+		m_led_driver->setLEDState(m_is_led_enabled);
+	}
 }
 
 // Get

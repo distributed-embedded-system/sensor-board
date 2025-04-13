@@ -17,6 +17,8 @@ void ESPNowBus::init()
 		return;
 	}
 
+	// esp_now_set_pmk(PMK);
+
 	// Register callback middleware (ESP Now supports one)
 	register_on_receive_callback_internal();
 
@@ -32,6 +34,7 @@ int ESPNowBus::register_peer(uint8_t* mac_addr)
 	memcpy(peerInfo.peer_addr, mac_addr, 6);
 	peerInfo.channel = 0;
 	peerInfo.encrypt = false;
+	// memcpy(peerInfo.lmk, LMK, ESP_NOW_KEY_LEN);
 
 	int status = esp_now_add_peer(&peerInfo);
 	if (status != ESP_OK)
@@ -60,6 +63,15 @@ void ESPNowBus::register_on_receive_callback_internal()
 		[](const uint8_t* mac_addr, const uint8_t* incomingData, int length)
 		{
 			memcpy(&__ESP_NOW_MESSAGE, incomingData, sizeof(__ESP_NOW_MESSAGE));
+
+			// Serial.println("");
+			// Serial.println("--- RECEIVING ---");
+			// Serial.print("ID: ");
+			// Serial.println(__ESP_NOW_MESSAGE.id);
+			// Serial.print("Type: ");
+			// Serial.println(__ESP_NOW_MESSAGE.type);
+			// Serial.print("Payload: ");
+			// Serial.println(__ESP_NOW_MESSAGE.payload);
 
 			auto iterator = __ESP_NOW_MESSAGE_CALLBACKS.find(__ESP_NOW_MESSAGE.type);
 			if (iterator ==
@@ -109,14 +121,14 @@ void ESPNowBus::send_message(uint8_t* mac_addr, ESPNowMessageTypes type, std::st
 	/**
 	 * IF DEBUG MODE
 	 */
-	Serial.println("");
-	Serial.println("--- SENDING ---");
-	Serial.print("ID: ");
-	Serial.println(m_message.id);
-	Serial.print("Type: ");
-	Serial.println(m_message.type);
-	Serial.print("Payload: ");
-	Serial.println(m_message.payload);
+	// Serial.println("");
+	// Serial.println("--- SENDING ---");
+	// Serial.print("ID: ");
+	// Serial.println(m_message.id);
+	// Serial.print("Type: ");
+	// Serial.println(m_message.type);
+	// Serial.print("Payload: ");
+	// Serial.println(m_message.payload);
 
 	// __MESSAGE_VECTOR.push_back(m_message);
 

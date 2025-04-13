@@ -9,9 +9,8 @@ void setup()
 
 void loop()
 {
-	// Serial.println("Hello Sensor board!");
 
-	static Core core(false); // pass mock_enabled
+	static Core core;
 	core.update();
 
 	delay(1000);

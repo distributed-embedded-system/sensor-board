@@ -15,10 +15,12 @@ class LightModule
 private:
 	unsigned long m_stamp;
 
-	bool m_has_changed			  = INITIAL_HAS_IS_DARK_CHANGED;
-	bool m_is_dark				  = INITIAL_IS_DARK;
-	bool m_is_led_enabled		  = INITIAL_IS_LED_ENABLED;
-	bool m_is_manual_mode_enabled = INITIAL_IS_LED_MANUAL_MODE_ENABLED;
+	bool		  m_has_changed			   = INITIAL_HAS_IS_DARK_CHANGED;
+	bool		  m_is_dark				   = INITIAL_IS_DARK;
+	bool		  m_is_led_enabled		   = INITIAL_IS_LED_ENABLED;
+	bool		  m_is_manual_mode_enabled = INITIAL_IS_LED_MANUAL_MODE_ENABLED;
+	bool		  m_last_reading		   = false;
+	unsigned long m_last_debounce_time	   = 0;
 
 	ldr_driver_up m_ldr_driver;
 	led_driver_up m_led_driver;

@@ -33,7 +33,7 @@ void TempModule::update()
 		return;
 
 	if (m_temperature == m_dht_driver->readTemperature() &&
-		m_humidity == m_dht_driver->readHumidity())
+		m_humidity == m_dht_driver->readHumidity() && m_fan_rpm == m_fan_driver->readRPM())
 		return;
 
 	// only update the temperature if there is a change from the last recorded state
@@ -41,6 +41,7 @@ void TempModule::update()
 	// Control Module
 	m_has_changed = true;
 
+	m_fan_rpm	  = m_fan_driver->readRPM();
 	m_humidity	  = m_dht_driver->readHumidity();
 	m_temperature = m_dht_driver->readTemperature();
 
@@ -63,10 +64,12 @@ void TempModule::update()
 
 	m_fan_speed = speed;
 	m_fan_driver->setSpeed(m_fan_speed);
+	m_fan_rpm = m_fan_driver->readRPM();
 
 	m_stamp = millis();
 }
 
+int	  TempModule::getFanRPM() { return m_fan_rpm; }
 int	  TempModule::getFanSpeed() { return m_fan_speed; }
 float TempModule::getTemp() { return m_temperature; }
 float TempModule::getHumidity() { return m_humidity; }
@@ -78,6 +81,7 @@ void TempModule::setFanSpeed(int fanSpeed)
 {
 	m_fan_speed = fanSpeed;
 	m_fan_driver->setSpeed(m_fan_speed);
+	m_fan_rpm = m_fan_driver->readRPM();
 }
 void TempModule::setTempThreshold(float tempThreshold) { m_temp_threshold = tempThreshold; }
 void TempModule::setIsManualModeEnabled(bool isManualModeEnabled)
