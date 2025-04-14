@@ -14,11 +14,12 @@
 #include "utils/Time.h"
 #include <Arduino.h>
 
-Core::Core()
+Core::Core(const bool is_mock_enabled = false)
 	// initialize the class member field in order to be ready by the time we reach the constructor
 	// and call init_server as the function uses m_server
 	// "{}" are used instead of "()" because we use newer C++ standard
-	: m_temp_stamp{millis()}, m_light_stamp{millis()}, m_esp_now{std::make_unique<ESPNowBus>()},
+	: m_is_mock_enabled{is_mock_enabled}, m_last_mock_step_time{millis()}, m_temp_stamp{millis()},
+	  m_light_stamp{millis()}, m_esp_now{std::make_unique<ESPNowBus>(is_mock_enabled)},
 	  m_temp_module{std::make_unique<TempModule>()}, m_light_module{std::make_unique<LightModule>()}
 {
 	Serial.println("Core initialized.");
@@ -39,11 +40,27 @@ void Core::update()
 	m_temp_module->update();
 	m_light_module->update();
 
-	// stop flooding with calls because we cannot read more than once every 2 secs anyway
-	// if (millis() - m_stamp <= Time::ONE_SECOND * 2)
-	// 	return;
-
 	unsigned long now = millis();
+
+	// MOCK SEQUENCE IF ENABLED
+	if (m_is_mock_enabled)
+	{
+		if (!m_mock_initialized)
+			setup_mock_sequence();
+
+		if (m_current_mock_step >= m_mock_steps.size())
+			m_current_mock_step = 0;
+
+		if (now - m_last_mock_step_time >= m_mock_steps[m_current_mock_step].delay_after_ms)
+		{
+			const auto& step = m_mock_steps[m_current_mock_step];
+			m_esp_now->mock_on_receive(step.type, step.payload.c_str());
+			m_last_mock_step_time = now;
+			m_current_mock_step++;
+		}
+
+		return;
+	}
 
 	if (now - m_temp_stamp >= 2 * Time::ONE_SECOND && m_temp_module->getHasChanged())
 	{
@@ -227,4 +244,22 @@ void Core::setup_on_receive_callbacks()
 								 ESPNowMessageTypes::ACK_LED_STATE_CHANGED,
 								 payload.to_string());
 		});
+}
+
+void Core::setup_mock_sequence()
+{
+	m_mock_steps		  = {{ESPNowMessageTypes::MANUAL_LED_CONTROL_CHANGE, "1", 1000},
+							 {ESPNowMessageTypes::LED_STATE_CHANGE, "1", 1000},
+							 {ESPNowMessageTypes::LED_STATE_CHANGE, "0", 1000},
+							 {ESPNowMessageTypes::MANUAL_LED_CONTROL_CHANGE, "0", 1000},
+
+							 {ESPNowMessageTypes::TEMP_THRESHOLD_CHANGE, "10.0", 5000},
+							 {ESPNowMessageTypes::TEMP_THRESHOLD_CHANGE, "25.0", 10000},
+							 {ESPNowMessageTypes::MANUAL_FAN_CONTROL_CHANGE, "1", 1000},
+							 {ESPNowMessageTypes::FAN_SPEED_CHANGE, "100", 10000},
+							 {ESPNowMessageTypes::FAN_SPEED_CHANGE, "0", 5000},
+							 {ESPNowMessageTypes::MANUAL_FAN_CONTROL_CHANGE, "0", 1000}};
+	m_current_mock_step	  = 0;
+	m_last_mock_step_time = millis();
+	m_mock_initialized	  = true;
 }

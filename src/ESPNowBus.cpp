@@ -1,6 +1,7 @@
 #include "ESPNowBus.h"
 #include "config/Core.h"
 #include <WiFi.h>
+#include <cstring>
 
 // why is it defined outside of the class? - because the low level
 // esp_now_register_recv func is a lambda that does not have access
@@ -135,7 +136,7 @@ void ESPNowBus::send_message(uint8_t* mac_addr, ESPNowMessageTypes type, std::st
 	esp_now_send(mac_addr, (uint8_t*)&m_message, sizeof(m_message));
 }
 
-void ESPNowBus::mock_on_receive(ESPNowMessageTypes type)
+void ESPNowBus::mock_on_receive(ESPNowMessageTypes type, const std::string& payload)
 {
 	if (!m_is_mock_enabled)
 		return;
@@ -151,15 +152,16 @@ void ESPNowBus::mock_on_receive(ESPNowMessageTypes type)
 	const MockResponse& mockResponse = mockResponseIter->second;
 
 	// Create a mock ESPNowMessage
-	ESPNowMessage message = {millis(), mockResponse.type, ""};
-	strcpy(message.payload, mockResponse.payload.c_str());
+	ESPNowMessage message = create_message_internal(
+		millis(), mockResponse.type, payload); // convert std::string to char
 
 	// Find the registered callback for this message type
 	auto iterator = __ESP_NOW_MESSAGE_CALLBACKS.find(message.type);
 	if (iterator != __ESP_NOW_MESSAGE_CALLBACKS.end())
 	{
-		// Call the registered callback with the address of the sender (SENSOR BOARD)
-		iterator->second(SENSOR_BOARD_MAC_ADDRESS, message);
+		Serial.println("Mocking esp-now response...");
+		// Call the registered callback with the address of the sender (MAIN BOARD)
+		iterator->second(MAIN_BOARD_MAC_ADDRESS, message);
 	}
 }
 
@@ -182,4 +184,16 @@ void ESPNowBus::get_mac_address()
 	{
 		Serial.println("Failed to read MAC address");
 	}
+}
+
+ESPNowMessage ESPNowBus::create_message_internal(unsigned long		id,
+												 ESPNowMessageTypes type,
+												 const std::string& str)
+{
+	ESPNowMessage msg;
+	msg.id	 = id;
+	msg.type = type;
+	std::strncpy(msg.payload, str.c_str(), sizeof(msg.payload) - 1);
+	msg.payload[sizeof(msg.payload) - 1] = '\0'; // null-terminate just in case
+	return msg;
 }

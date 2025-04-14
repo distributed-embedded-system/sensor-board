@@ -31,10 +31,12 @@ public:
 	void register_on_receive_callback(ESPNowMessageTypes		   type,
 									  const ESPNowMessageCallback& callback);
 	void send_message(uint8_t* mac_addr, ESPNowMessageTypes type, std::string payload);
-	void mock_on_receive(ESPNowMessageTypes type);
+	void mock_on_receive(ESPNowMessageTypes type, const std::string& payload);
 
 private:
 	void register_on_receive_callback_internal();
+	ESPNowMessage
+	create_message_internal(unsigned long id, ESPNowMessageTypes type, const std::string& str);
 };
 
 #endif

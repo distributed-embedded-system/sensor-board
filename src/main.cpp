@@ -9,9 +9,6 @@ void setup()
 
 void loop()
 {
-
-	static Core core;
+	static Core core(false);
 	core.update();
-
-	delay(1000);
 }
